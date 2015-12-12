@@ -2,7 +2,7 @@ node_modules
 bower_components
 dist
 bin
-static
+static/*.js
 _workspace
 *.swp
 *.log
