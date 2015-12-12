@@ -4,11 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/unrolled/render"
 	"io/ioutil"
+	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
+	"time"
 )
+
+var upgrader = websocket.Upgrader{}
 
 type Sith struct {
 	ID         int    `json:"id"`
@@ -43,7 +49,8 @@ func main() {
 		f, err := ioutil.ReadFile("./data/sith.json")
 
 		if err != nil {
-			panic(err) // to be fixed
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		d := json.NewDecoder(bytes.NewReader(f))
@@ -51,7 +58,8 @@ func main() {
 		var sithLords []Sith
 
 		if err := d.Decode(&sithLords); err != nil {
-			panic(err) // to be fixed
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		for _, sith := range sithLords {
@@ -62,6 +70,45 @@ func main() {
 		}
 
 		http.Error(w, "No sith found for this ID", http.StatusNotFound)
+	})
+
+	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		// return a random world
+		c, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer c.Close()
+
+		for {
+			f, err := ioutil.ReadFile("./data/worlds.json")
+
+			if err != nil {
+				log.Println(err)
+				break
+			}
+
+			d := json.NewDecoder(bytes.NewReader(f))
+
+			var worlds []World
+
+			if err := d.Decode(&worlds); err != nil {
+				log.Println(err)
+				break
+			}
+
+			world := worlds[rand.Intn(len(worlds))]
+			log.Println("World:", world.Name)
+
+			if err := c.WriteJSON(world); err != nil {
+				log.Println("write:", err)
+				break
+			}
+
+			time.Sleep(10 * time.Second)
+		}
+
 	})
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
