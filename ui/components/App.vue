@@ -5,7 +5,7 @@
 
             <section class="css-scrollable-list">
               <ul class="css-slots">
-                <li :style="{ color: slot && slot.homeworld.id === location.id ? 'red': '' }" v-for="slot in slots" class="css-slot" track-by="$index">
+                <li :style="{ color: isSithOnWorld(slot) ? 'red': '' }" v-for="slot in slots" class="css-slot" track-by="$index">
                   <h3 v-if="slot && slot.name">{{slot.name}}</h3>
                   <h6 v-if="slot && slot.homeworld">Homeworld: {{slot.homeworld.name}}</h6>
                 </li>
@@ -55,6 +55,9 @@ export default {
                 this.buttonDownClass += ' css-button-disabled';
             }
 
+        },
+        isSithOnWorld(slot) {
+            return slot && this.location && this.location.id === slot.homeworld.id;
         },
         moveUp(event) {
             store.moveUp();
