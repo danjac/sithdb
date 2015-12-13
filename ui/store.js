@@ -3,14 +3,17 @@ import { EventEmitter } from 'events';
 
 const store = new EventEmitter();
 
+let client = null;
+
 let location = null;
 let slots = [null, null, null, null, null];
-let client = null;
+
 let nextId = 3616;
 let index = 0;
+
 let xhrRequests = [];
-let canMoveUp = true;
-let canMoveDown = true;
+
+let isSithOnWorld = false;
 let isFirst = false;
 let isLast = false;
 
@@ -25,15 +28,14 @@ function checkIfSithHomeworld() {
   _.each(slots, slot => {
     if (slot && location && slot.homeworld.id === location.id) {
         isSelectedSlot = true;
+        return;
     }
   });
   if (isSelectedSlot) {
-    canMoveUp = false;
-    canMoveDown = false;
+    isSithOnWorld = true;
     cancelRequests();
   } else {
-    canMoveUp = !isFirst;
-    canMoveDown = !isLast;
+    isSithOnWorld = false;
   }
 }
 
@@ -53,17 +55,13 @@ function fillSlots(direction) {
 
     if (!nextId) {
       if (direction == "up") {
-        canMoveUp = false;
         isFirst = true;
       } else {
-        canMoveDown = false;
         isLast = true;
       }
     } else {
         isFirst = false;
         isLast = false;
-        canMoveUp = true;
-        canMoveDown = true;
     }
 
     checkIfSithHomeworld();
@@ -82,8 +80,13 @@ function fillSlots(direction) {
 }
 
 
-store.canMoveUp = () => canMoveUp;
-store.canMoveDown = () => canMoveDown;
+store.canMoveUp = () => {
+  return !isFirst && !isSithOnWorld;
+};
+
+store.canMoveDown = () => {
+  return !isLast && !isSithOnWorld;
+};
 
 store.getLocation = () => {
   return location;
@@ -95,7 +98,7 @@ store.getSlots = () => {
 
 
 store.moveUp = () => {
-  if (!canMoveUp) {
+  if (!store.canMoveUp()) {
     return;
   }
   cancelRequests();
@@ -110,7 +113,7 @@ store.moveUp = () => {
 };
 
 store.moveDown = () => {
-  if (!canMoveDown) {
+  if (!store.canMoveDown()) {
     return;
   }
   cancelRequests();
