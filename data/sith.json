@@ -81,7 +81,7 @@
   },
   {
     "id": 5611,
-    "name": "Na\"daz",
+    "name": "Na'daz",
     "homeworld": {
       "id": 35,
       "name": "Ryloth"
@@ -91,7 +91,7 @@
   },
   {
     "id": 9285,
-    "name": "Kas\"im",
+    "name": "Kas'im",
     "homeworld": {
       "id": 38,
       "name": "Nal Hutta"
@@ -144,7 +144,7 @@
     "name": "Darth Tenebrous",
     "homeworld": {
       "id": 90,
-      "name": "Clak\"dor VII"
+      "name": "Clak'dor VII"
     },
     "master": 1121,
     "apprentice": 2350

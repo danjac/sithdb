@@ -30,7 +30,7 @@ type World struct {
 }
 
 func main() {
-
+	rand.Seed(time.Now().UTC().UnixNano())
 	router := mux.NewRouter()
 
 	router.PathPrefix("/static").Handler(http.StripPrefix("/static",
