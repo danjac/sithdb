@@ -128,7 +128,7 @@ func main() {
 
 		jsBaseURL := ""
 		if *env == "dev" {
-			jsBaseURL = "http://localhost:8080"
+			jsBaseURL = devServerURL
 		}
 		ctx := map[string]string{
 			"jsBaseURL": jsBaseURL,
