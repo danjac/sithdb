@@ -41,6 +41,20 @@ type World struct {
 	Name string `json:"name"`
 }
 
+func readJSONFromFile(filename string, data interface{}) error {
+	f, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	d := json.NewDecoder(bytes.NewReader(f))
+
+	if err := d.Decode(data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func main() {
 
 	flag.Parse()
@@ -62,18 +76,9 @@ func main() {
 			return
 		}
 
-		f, err := ioutil.ReadFile("./data/sith.json")
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		d := json.NewDecoder(bytes.NewReader(f))
-
 		var sithLords []Sith
 
-		if err := d.Decode(&sithLords); err != nil {
+		if err := readJSONFromFile("./data/sith.json", &sithLords); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -98,18 +103,10 @@ func main() {
 		defer c.Close()
 
 		for {
-			f, err := ioutil.ReadFile("./data/worlds.json")
-
-			if err != nil {
-				log.Println(err)
-				break
-			}
-
-			d := json.NewDecoder(bytes.NewReader(f))
 
 			var worlds []World
 
-			if err := d.Decode(&worlds); err != nil {
+			if err := readJSONFromFile("./data/worlds.json", &worlds); err != nil {
 				log.Println(err)
 				break
 			}
