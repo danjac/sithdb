@@ -1,0 +1,22 @@
+{
+	"ImportPath": "github.com/danjac/sithdb",
+	"GoVersion": "go1.5.2",
+	"Deps": [
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "215affda49addc4c8ef7e2534915df2c8c35c6cd"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "f8220e087da2fc83d083bfc0289ed7f9db3536bd"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "b6ab76f1fe9803ee1d59e7e5b2a797c1fe897ce5"
+		},
+		{
+			"ImportPath": "github.com/unrolled/render",
+			"Rev": "c442bc30e10d9a5ad49f2837d5e175de0bd0a52a"
+		}
+	]
+}
