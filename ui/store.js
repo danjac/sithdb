@@ -8,9 +8,6 @@ let client = null;
 let location = null;
 let slots = [null, null, null, null, null];
 
-let nextId = 3616;
-let index = 0;
-
 let xhrRequests = [];
 
 let isSithOnWorld = false;
@@ -24,22 +21,16 @@ function cancelRequests() {
 }
 
 function checkIfSithHomeworld() {
-  let isSelectedSlot = false;
-  _.each(slots, slot => {
-    if (slot && location && slot.homeworld.id === location.id) {
-        isSelectedSlot = true;
-        return;
-    }
+  isSithOnWorld = _.some(slots, slot => {
+    return slot && location && slot.homeworld.id === location.id;
   });
-  if (isSelectedSlot) {
-    isSithOnWorld = true;
+  if (isSithOnWorld) {
     cancelRequests();
-  } else {
-    isSithOnWorld = false;
   }
+
 }
 
-function fillSlots(direction) {
+function fillSlots(direction, nextId, index) {
 
   client.get("/sith/" + nextId, data => {
 
@@ -53,23 +44,15 @@ function fillSlots(direction) {
       index += 1;
     }
 
-    if (!nextId) {
-      if (direction == "up") {
-        isFirst = true;
-      } else {
-        isLast = true;
-      }
-    } else {
-        isFirst = false;
-        isLast = false;
-    }
+    isFirst = direction == "up" && !nextId;
+    isLast = direction == "down" && !nextId;
 
     checkIfSithHomeworld();
 
     store.emit("update");
 
     if (nextId && slots[index] === null) {
-      fillSlots(direction);
+      fillSlots(direction, nextId, index);
     }
 
   }, {
@@ -102,14 +85,19 @@ store.moveUp = () => {
     return;
   }
   cancelRequests();
+
   let newSlots = slots.slice(0, 3);
-  nextId = newSlots[0].master;
-  index = 1;
+
+  const firstSlot = newSlots[0];
+  const nextId = firstSlot ? firstSlot.master : 0;
+
   newSlots.splice(0, 0, null);
   newSlots.splice(1, 0, null);
+
   slots = newSlots;
   store.emit("update");
-  fillSlots("up");
+
+  fillSlots("up", nextId, 1);
 };
 
 store.moveDown = () => {
@@ -117,20 +105,24 @@ store.moveDown = () => {
     return;
   }
   cancelRequests();
+
   let newSlots = slots.slice(2);
-  nextId = newSlots[newSlots.length - 1].apprentice;
-  index = 3;
+  const lastSlot = newSlots[newSlots.length - 1];
+  const nextId = lastSlot ? lastSlot.apprentice : 0;
+
   newSlots.splice(4, 0, null);
   newSlots.splice(5, 0, null);
+
   slots = newSlots;
   store.emit("update");
-  fillSlots("down");
+
+  fillSlots("down", nextId, 3);
 };
 
 
 store.initialize = (httpClient) => {
   client = httpClient;
-  fillSlots("down");
+  fillSlots("down", 3616, 0);
 };
 
 
