@@ -6,60 +6,9 @@
         <link rel="stylesheet" type="text/css" href="/static/styles.css">
     </head>
     <body>
-        <div class="app-container">
-            <div class="css-root">
-                <h1 class="css-planet-monitor">Obi-Wan currently on Tatooine</h1>
-
-                <section class="css-scrollable-list">
-                  <ul class="css-slots">
-                    <li class="css-slot">
-                      <h3>Jorak Uln</h3>
-                      <h6>Homeworld: Korriban</h6>
-                    </li>
-                    <li class="css-slot">
-                      <h3>Skere Kaan</h3>
-                      <h6>Homeworld: Coruscant</h6>
-                    </li>
-                    <li class="css-slot">
-                      <h3>Na'daz</h3>
-                      <h6>Homeworld: Ryloth</h6>
-                    </li>
-                    <li class="css-slot">
-                      <h3>Kas'im</h3>
-                      <h6>Homeworld: Nal Hutta</h6>
-                    </li>
-                    <li class="css-slot">
-                      <h3>Darth Bane</h3>
-                      <h6>Homeworld: Apatros</h6>
-                    </li>
-                  </ul>
-
-                  <div class="css-scroll-buttons">
-                    <button class="css-button-up"></button>
-                    <button class="css-button-down"></button>
-                  </div>
-                </section>
-          </div>
+        <div id="app">
+            <app></app>
         </div>
-        <!--
-        <script>
-            window.addEventListener("load", function(event) {
-                var ws = new WebSocket("ws://localhost:3000/ws");
-                ws.onopen = function(event) {
-                    console.log("OPEN SOCKET");
-                };
-                ws.onclose = function(event) {
-                    console.log("CLOSE SOCKET");
-                    ws = null;
-                };
-                ws.onmessage = function(event) {
-                    console.log("SOCKET MSG", event.data);
-                };
-                ws.onerror = function(event) {
-                    console.log("SOCKET ERR", event.data);
-                };
-            });
-        </script>
-        -->
+        <script src="http://localhost:8080/static/main.js"></script>
     </body>
 </html>
