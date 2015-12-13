@@ -11,6 +11,8 @@ let index = 0;
 let xhrRequests = [];
 let canMoveUp = true;
 let canMoveDown = true;
+let isFirst = false;
+let isLast = false;
 
 function cancelRequests() {
   for (var i=0; i < xhrRequests.length; i++) {
@@ -21,7 +23,7 @@ function cancelRequests() {
 function checkIfSithHomeworld() {
   let isSelectedSlot = false;
   _.each(slots, slot => {
-    if (slot && slot.homeworld.id === location.id) {
+    if (slot && location && slot.homeworld.id === location.id) {
         isSelectedSlot = true;
     }
   });
@@ -30,8 +32,8 @@ function checkIfSithHomeworld() {
     canMoveDown = false;
     cancelRequests();
   } else {
-    canMoveUp = true;
-    canMoveDown = true;
+    canMoveUp = !isFirst;
+    canMoveDown = !isLast;
   }
 }
 
@@ -52,13 +54,19 @@ function fillSlots(direction) {
     if (!nextId) {
       if (direction == "up") {
         canMoveUp = false;
+        isFirst = true;
       } else {
         canMoveDown = false;
+        isLast = true;
       }
     } else {
+        isFirst = false;
+        isLast = false;
         canMoveUp = true;
         canMoveDown = true;
     }
+
+    checkIfSithHomeworld();
 
     store.emit("update");
 
