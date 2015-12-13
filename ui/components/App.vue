@@ -1,7 +1,7 @@
 <template>
     <div class="app-container">
         <div class="css-root">
-            <h1 v-if="location" class="css-planet-monitor">Obi-Wan currently on {{location.name}}</h1>
+            <h1 v-show="location" class="css-planet-monitor">Obi-Wan currently on {{location.name}}</h1>
 
             <section class="css-scrollable-list">
               <ul class="css-slots">

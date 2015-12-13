@@ -3,12 +3,12 @@
 
     <head>
         <title>Obi-Wan's Sith Database</title>
-        <link rel="stylesheet" type="text/css" href="/static/styles.css">
+        <link rel="stylesheet" type="text/css" href="{{ .staticURL }}styles.css">
     </head>
     <body>
         <div id="app">
             <app></app>
         </div>
-        <script src="http://localhost:8080/static/main.js"></script>
+        <script src="{{ .jsBaseURL }}{{ .staticURL }}main.js"></script>
     </body>
 </html>

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/unrolled/render"
@@ -14,7 +15,18 @@ import (
 	"time"
 )
 
+const (
+	staticURL    = "/static/"
+	staticDir    = "./static/"
+	devServerURL = "http://localhost:8080"
+)
+
 var upgrader = websocket.Upgrader{}
+
+var (
+	env  = flag.String("env", "prod", "environment ('prod' or 'dev')")
+	port = flag.String("port", "3000", "server port")
+)
 
 type Sith struct {
 	ID         int    `json:"id"`
@@ -30,11 +42,15 @@ type World struct {
 }
 
 func main() {
+
+	flag.Parse()
+
 	rand.Seed(time.Now().UTC().UnixNano())
+
 	router := mux.NewRouter()
 
-	router.PathPrefix("/static").Handler(http.StripPrefix("/static",
-		http.FileServer(http.Dir("./static"))))
+	router.PathPrefix(staticURL).Handler(http.StripPrefix(staticURL,
+		http.FileServer(http.Dir(staticDir))))
 
 	render := render.New()
 
@@ -112,9 +128,18 @@ func main() {
 	})
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		render.HTML(w, http.StatusOK, "index", nil)
+
+		jsBaseURL := ""
+		if *env == "dev" {
+			jsBaseURL = "http://localhost:8080"
+		}
+		ctx := map[string]string{
+			"jsBaseURL": jsBaseURL,
+			"staticURL": staticURL,
+		}
+		render.HTML(w, http.StatusOK, "index", ctx)
 	})
 
-	http.ListenAndServe(":3000", router)
+	http.ListenAndServe(":"+*port, router)
 
 }
