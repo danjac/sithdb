@@ -10,6 +10,7 @@ let slots = [null, null, null, null, null];
 
 let xhrRequests = [];
 
+let isLoading = false;
 let isSithOnWorld = false;
 let isFirst = false;
 let isLast = false;
@@ -32,7 +33,15 @@ function checkIfSithHomeworld() {
 
 function fillSlots(direction, nextId, index) {
 
+  if (!nextId) {
+    return;
+  }
+
+  isLoading = true;
+
   client.get("/sith/" + nextId, data => {
+
+    isLoading = false;
 
     slots[index] = data;
 
@@ -53,6 +62,8 @@ function fillSlots(direction, nextId, index) {
 
     if (nextId && slots[index] === null) {
       fillSlots(direction, nextId, index);
+    } else {
+      isLoading = false;
     }
 
   }, {
@@ -64,11 +75,11 @@ function fillSlots(direction, nextId, index) {
 
 
 store.canMoveUp = () => {
-  return !isFirst && !isSithOnWorld;
+  return !isFirst && !isSithOnWorld && !isLoading;
 };
 
 store.canMoveDown = () => {
-  return !isLast && !isSithOnWorld;
+  return !isLast && !isSithOnWorld && !isLoading;
 };
 
 store.getLocation = () => {
@@ -84,6 +95,7 @@ store.moveUp = () => {
   if (!store.canMoveUp()) {
     return;
   }
+
   cancelRequests();
 
   let newSlots = slots.slice(0, 3);
@@ -104,6 +116,7 @@ store.moveDown = () => {
   if (!store.canMoveDown()) {
     return;
   }
+
   cancelRequests();
 
   let newSlots = slots.slice(2);
