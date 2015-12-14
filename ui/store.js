@@ -62,8 +62,6 @@ function fillSlots(direction, nextId, index) {
 
     if (nextId && slots[index] === null) {
       fillSlots(direction, nextId, index);
-    } else {
-      isLoading = false;
     }
 
   }, {
