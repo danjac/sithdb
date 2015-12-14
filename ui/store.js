@@ -33,7 +33,7 @@ function checkIfSithHomeworld() {
 
 function fillSlots(direction, nextId, index) {
 
-  if (!nextId) {
+  if (!nextId || isLoading) {
     return;
   }
 
