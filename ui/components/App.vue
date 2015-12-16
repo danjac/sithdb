@@ -39,10 +39,8 @@ export default {
             slots: [null, null, null, null, null],
             isLoading: false,
             isSithOnWorld: false,
-            isFirst: false,
-            isLast: false,
-            buttonUpClass: 'css-button-up css-button-disabled',
-            buttonDownClass: 'css-button-down css-button-disabled'
+            isFirst: true,
+            isLast: true
         };
     },
     created() {
@@ -54,16 +52,22 @@ export default {
     ready() {
         this.fillSlots("down", 3616, 0);
     },
-    methods: {
-
+    computed: {
         canMoveUp() {
           return !this.isFirst && !this.isSithOnWorld && !this.isLoading;
         },
-
         canMoveDown() {
           return !this.isLast && !this.isSithOnWorld && !this.isLoading;
         },
-        
+        buttonUpClass() {
+            return 'css-button-up' + (this.canMoveUp ? '' : ' css-button-disabled'); 
+        },
+        buttonDownClass() {
+            return 'css-button-down' + (this.canMoveDown ? '' : ' css-button-disabled'); 
+        }
+    },
+    methods: {
+       
         fillSlots(direction, nextId, index) {
 
           if (!nextId || this.isLoading) {
@@ -103,7 +107,7 @@ export default {
 
         moveUp () {
 
-          if (!this.canMoveUp()) {
+          if (!this.canMoveUp) {
             return;
           }
 
@@ -123,7 +127,7 @@ export default {
         },
 
         moveDown() {
-          if (!this.canMoveDown()) {
+          if (!this.canMoveDown) {
             return;
           }
 
@@ -150,21 +154,8 @@ export default {
         },
 
         update(event) {
-
             this.location = store.getLocation();
             this.checkIfSithHomeworld();
-
-            this.buttonUpClass = 'css-button-up';
-
-            if (!this.canMoveUp()) {
-                this.buttonUpClass += ' css-button-disabled';
-            }
-
-            this.buttonDownClass = 'css-button-down';
-
-            if (!this.canMoveDown()) {
-                this.buttonDownClass += ' css-button-disabled';
-            }
         },
         isSithHere(slot) {
             return slot && this.location && this.location.id === slot.homeworld.id;
