@@ -1,18 +1,15 @@
-import _ from 'lodash';
-import { EventEmitter } from 'events';
+import { createStore, applyMiddleware } from 'redux';
+import thunkMiddleware from 'redux-thunk';
+import createLogger from 'redux-logger';
+import rootReducer from './reducers';
 
-const store = new EventEmitter();
+const loggerMiddleware = createLogger();
 
-let location = null;
+const createStoreWithMiddleware = applyMiddleware(
+  thunkMiddleware,
+  loggerMiddleware
+)(createStore);
 
-store.getLocation = () => {
-  return location;
+export default function configureStore(initialState) {
+  return createStoreWithMiddleware(rootReducer, initialState);
 }
-
-store.updateLocation = (newLocation) => {
-  location = newLocation;
-  store.emit("update");
-};
-
-export default store;
-

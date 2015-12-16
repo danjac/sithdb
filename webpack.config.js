@@ -1,4 +1,3 @@
-var vue = require('vue-loader');
 var webpack = require('webpack');
 
 module.exports = {
@@ -8,23 +7,23 @@ module.exports = {
     publicPath: '/static/',
     filename: 'main.js'
   },
+  plugins: [
+      new webpack.HotModuleReplacementPlugin(),
+      new webpack.NoErrorsPlugin()
+  ],
   module: {
     loaders: [
-      {
-        test: /\.vue$/,
-        loader: 'vue'
-      },
       {
         test: /\.js$/,
         // excluding some local linked packages.
         // for normal use cases only node_modules is needed.
-        exclude: /node_modules|vue\/src|vue-router\/|vue-loader\/|vue-hot-reload-api\//,
+        exclude: /node_modules/,
         loader: 'babel'
       }
     ]
   },
   babel: {
-    presets: ['es2015'],
+    presets: ['react', 'es2015'],
     plugins: ['transform-runtime']
   }
 }

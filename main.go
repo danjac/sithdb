@@ -25,7 +25,7 @@ var upgrader = websocket.Upgrader{}
 
 var (
 	env  = flag.String("env", "prod", "environment ('prod' or 'dev')")
-	port = flag.String("port", "3000", "server port")
+	port = flag.String("port", "3001", "server port")
 )
 
 type Sith struct {
@@ -137,6 +137,8 @@ func main() {
 		render.HTML(w, http.StatusOK, "index", ctx)
 	})
 
-	http.ListenAndServe(":"+*port, router)
+	if err := http.ListenAndServe(":"+*port, router); err != nil {
+		panic(err)
+	}
 
 }
