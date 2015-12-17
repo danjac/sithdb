@@ -7,9 +7,18 @@ export const CHANGE_LOCATION = 'CHANGE_LOCATION';
 export const SCROLL_UP = 'SCROLL_UP';
 export const SCROLL_DOWN = 'SCROLL_DOWN';
 export const FETCH_SITH = 'FETCH_SITH';
+export const SITH_FETCHING = 'SITH_FETCHING';
 export const SITH_FETCHED = 'SITH_FETCHED';
 export const SITH_FOUND = 'SITH_FOUND';
 export const NUM_SLOTS = 5;
+
+function createAction(type) {
+  return (payload) => {
+    return Object.assign({}, payload, {
+      type,
+    });
+  };
+}
 
 function cancelRequests() {
   for (var i=0; i < xhrRequests.length; i++){
@@ -21,38 +30,37 @@ function checkIfSithFound(location, slots) {
 
   if (location === null) return false;
 
-  const isSithFound = _.some(slots, slot => {
+  const isFound = _.some(slots, slot => {
     return slot && slot.homeworld.id === location.id;
   });
 
-  if (!isSithFound) {
+  if (isFound) {
     cancelRequests();
   }
-  return isSithFound;
+  return isFound;
 
 }
 
-export function locationChanged(location) {
-    return {
-      type: CHANGE_LOCATION,
-      location
-    };
-}
+// simple state changes
+//
+const sithFound = createAction(SITH_FOUND);
+const locationChanged = createAction(CHANGE_LOCATION);
+const scrollUpDone = createAction(SCROLL_UP);
+const scrollDownDone = createAction(SCROLL_DOWN);
+const sithFetching = createAction(SITH_FETCHING);
+const sithFetched = createAction(SITH_FETCHED);
 
 export function changeLocation(location) {
-  return (dispatch, getState) => {
-    const state = getState();
-    const isFound = checkIfSithFound(location, state.board.slots);
-    dispatch(sithFound(isFound));
-    dispatch(locationChanged(location));
-  };
-}
 
-export function sithFound(isFound) {
-  return {
-    type: SITH_FOUND,
-    isSithFound: isFound
-  }
+  return (dispatch, getState) => {
+
+    const state = getState();
+    const isSithFound = checkIfSithFound(location, state.slots);
+
+    dispatch(sithFound({ isSithFound }));
+    dispatch(locationChanged({ location }));
+
+  };
 }
 
 export function initBoard() {
@@ -62,18 +70,12 @@ export function initBoard() {
   };
 }
 
-function scrollUpDone() {
-  return {
-        type: SCROLL_UP
-  };
-}
-
 export function scrollUp() {
 
   return (dispatch, getState) => {
 
     const state = getState();
-    const firstSlot = state.board.slots[0];
+    const firstSlot = state.slots[0];
 
     const nextId = firstSlot ? firstSlot.master : 0;
 
@@ -89,47 +91,36 @@ export function scrollUp() {
   };
 }
 
-
 export function scrollDown() {
 
   return (dispatch, getState) => {
 
-    const state = getState();
-    const lastSlot = state.board.slots[state.slots.length - 1];
+    const { slots } = getState();
+    const lastSlot = slots[slots.length - 1];
 
     const nextId = lastSlot ? lastSlot.apprentice : 0;
 
     cancelRequests();
 
+    dispatch(scrollDownDone());
+
     if (nextId) {
-      // skip last 2 slots
       dispatch(fetchSith(NUM_SLOTS - 2, nextId, SCROLL_DOWN));
     }
 
-    return {
-        type: SCROLL_DOWN
-    };
   };
 }
 
 
 function fetchSith(index, id, direction) {
 
-  // we need to fill the board with 5 slots.
-
-  // to do this, start with the first slot.
-  // if slot is empty then fetch sith from the API.
-  // if slot is not empty then move to next slot.
-
-  // we need direction (up/down) to determine whether to look for master/apprentice
-  // if either is 0 (depending on direction) then stop.
-
   return (dispatch, getState) => {
 
-    const { currentLocation, board } = getState();
-    const { isSithFound, slots } = board;
+    const { currentLocation, isSithFound, slots } = getState();
 
     if (isSithFound) return;
+
+    dispatch(sithFetching());
 
     const req = request
       .get(`/sith/${id}`)
@@ -137,7 +128,10 @@ function fetchSith(index, id, direction) {
 
         // error handling etc TBD
         const sith = res.body;
-        dispatch(sithFetched(sith, index));
+
+        dispatch(sithFetched({ sith, index }));
+        const isSithFound = checkIfSithFound(currentLocation, slots);
+        dispatch(sithFound({ isSithFound }));
 
         const nextId = direction === SCROLL_UP ? sith.master : sith.apprentice;
         const nextIndex = direction === SCROLL_UP ? index - 1 : index + 1;
@@ -152,12 +146,4 @@ function fetchSith(index, id, direction) {
 
   };
 
-}
-
-function sithFetched(sith, index) {
-  return {
-    type: SITH_FETCHED,
-    sith,
-    index
-  };
 }

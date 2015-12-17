@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { initBoard, scrollUp } from './actions';
+import { initBoard, scrollUp, scrollDown } from './actions';
 
 const renderHeader = (currentLocation) => {
   return currentLocation ? <h1 className="css-planet-monitor">Obi-Wan currently on {currentLocation.name}</h1> : '';
@@ -40,16 +40,23 @@ class App extends React.Component {
 
   handleScrollUp(event) {
     event.preventDefault();
-    const { dispatch } = this.props;
-    dispatch(scrollUp());
+    const { dispatch, canScrollUp } = this.props;
+    if (canScrollUp) {
+      dispatch(scrollUp());
+    }
+  }
+
+  handleScrollDown(event) {
+    event.preventDefault();
+    const { dispatch, canScrollDown } = this.props;
+    if (canScrollDown) {
+      dispatch(scrollDown());
+    }
   }
 
   render() {
 
-    const { currentLocation, slots, isSithFound, isFirst, isLast } = this.props;
-
-    const canScrollUp = !isSithFound && !isFirst;
-    const canScrollDown = !isSithFound && !isLast;
+    const { currentLocation, slots, canScrollUp, canScrollDown } = this.props;
 
     const buttonUpClass = 'css-button-up' + (canScrollUp ? '' : ' css-button-disabled');
 
@@ -66,7 +73,7 @@ class App extends React.Component {
 
               <div className="css-scroll-buttons">
                 <button onClick={this.handleScrollUp.bind(this)} className={buttonUpClass}></button>
-                <button className={buttonDownClass}></button>
+                <button onClick={this.handleScrollDown.bind(this)} className={buttonDownClass}></button>
               </div>
             </section>
       </div>
@@ -78,20 +85,29 @@ class App extends React.Component {
 
 App.propTypes = {
   currentLocation: React.PropTypes.object,
-  board: React.PropTypes.object,
+  canScrollUp: React.PropTypes.bool,
+  canScrollDown: React.PropTypes.bool,
   dispatch: React.PropTypes.func.isRequired
 
 };
 
 function mapStateToProps(state) {
-  const { currentLocation, board } = state;
-  const { isFirst, isLast, slots, isSithFound } = board;
+  const {
+    isFirst,
+    isLast,
+    slots,
+    isSithFound,
+    isLoading,
+    currentLocation } = state;
+
+  const canScrollUp = !isSithFound && !isFirst && !isLoading;
+  const canScrollDown = !isSithFound && !isLast && !isLoading;
+
   return {
     currentLocation,
     slots,
-    isSithFound,
-    isFirst,
-    isLast
+    canScrollUp,
+    canScrollDown
   };
 }
 
