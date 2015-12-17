@@ -93,15 +93,10 @@ App.propTypes = {
 
 function mapStateToProps(state) {
   const {
-    isFirst,
-    isLast,
     slots,
-    isSithFound,
-    isLoading,
+    canScrollUp,
+    canScrollDown,
     currentLocation } = state;
-
-  const canScrollUp = !isSithFound && !isFirst && !isLoading;
-  const canScrollDown = !isSithFound && !isLast && !isLoading;
 
   return {
     currentLocation,

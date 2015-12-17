@@ -1,16 +1,16 @@
 import _ from 'lodash';
 import request from 'superagent';
 
-let xhrRequests = [];
+import {
+  CHANGE_LOCATION,
+  SITH_FETCHED,
+  SITH_FETCHING,
+  SITH_FOUND,
+  SCROLL_UP,
+  SCROLL_DOWN,
+  NUM_SLOTS,
+} from './constants';
 
-export const CHANGE_LOCATION = 'CHANGE_LOCATION';
-export const SCROLL_UP = 'SCROLL_UP';
-export const SCROLL_DOWN = 'SCROLL_DOWN';
-export const FETCH_SITH = 'FETCH_SITH';
-export const SITH_FETCHING = 'SITH_FETCHING';
-export const SITH_FETCHED = 'SITH_FETCHED';
-export const SITH_FOUND = 'SITH_FOUND';
-export const NUM_SLOTS = 5;
 
 function createAction(type) {
   return (payload) => {
@@ -20,46 +20,17 @@ function createAction(type) {
   };
 }
 
-function cancelRequests() {
-  for (var i=0; i < xhrRequests.length; i++){
-    xhrRequests.shift().abort();
-  }
-}
-
-function checkIfSithFound(location, slots) {
-
-  if (location === null) return false;
-
-  const isFound = _.some(slots, slot => {
-    return slot && slot.homeworld.id === location.id;
-  });
-
-  if (isFound) {
-    cancelRequests();
-  }
-  return isFound;
-
-}
-
 // simple state changes
 //
-const sithFound = createAction(SITH_FOUND);
-const locationChanged = createAction(CHANGE_LOCATION);
 const scrollUpDone = createAction(SCROLL_UP);
 const scrollDownDone = createAction(SCROLL_DOWN);
 const sithFetching = createAction(SITH_FETCHING);
 const sithFetched = createAction(SITH_FETCHED);
 
-export function changeLocation(location) {
-
-  return (dispatch, getState) => {
-
-    const state = getState();
-    const isSithFound = checkIfSithFound(location, state.slots);
-
-    dispatch(sithFound({ isSithFound }));
-    dispatch(locationChanged({ location }));
-
+export function changeLocation(newLocation) {
+  return {
+    type: CHANGE_LOCATION,
+    currentLocation: newLocation
   };
 }
 
@@ -78,8 +49,6 @@ export function scrollUp() {
     const firstSlot = state.slots[0];
 
     const nextId = firstSlot ? firstSlot.master : 0;
-
-    cancelRequests();
 
     dispatch(scrollUpDone());
 
@@ -100,8 +69,6 @@ export function scrollDown() {
 
     const nextId = lastSlot ? lastSlot.apprentice : 0;
 
-    cancelRequests();
-
     dispatch(scrollDownDone());
 
     if (nextId) {
@@ -116,22 +83,19 @@ function fetchSith(index, id, direction) {
 
   return (dispatch, getState) => {
 
-    const { currentLocation, isSithFound, slots } = getState();
+    const { isLoading, canScrollUp, canScrollDown } = getState();
 
-    if (isSithFound) return;
-
-    dispatch(sithFetching());
+    if (isLoading) return;
+    if (!canScrollUp && direction === SCROLL_UP) return;
+    if (!canScrollDown && direction === SCROLL_DOWN) return;
 
     const req = request
       .get(`/sith/${id}`)
       .end((err, res) => {
 
-        // error handling etc TBD
         const sith = res.body;
 
         dispatch(sithFetched({ sith, index }));
-        const isSithFound = checkIfSithFound(currentLocation, slots);
-        dispatch(sithFound({ isSithFound }));
 
         const nextId = direction === SCROLL_UP ? sith.master : sith.apprentice;
         const nextIndex = direction === SCROLL_UP ? index - 1 : index + 1;
@@ -141,8 +105,7 @@ function fetchSith(index, id, direction) {
         }
       });
 
-    // we can abort this request later
-    xhrRequests.push(req);
+    dispatch(sithFetching({ request: req }));
 
   };
 
