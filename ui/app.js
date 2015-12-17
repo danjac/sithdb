@@ -1,4 +1,5 @@
 import React from 'react';
+import classnames from 'classnames';
 import { connect } from 'react-redux';
 
 import { initBoard, scrollUp, scrollDown } from './actions';
@@ -58,9 +59,8 @@ class App extends React.Component {
 
     const { currentLocation, slots, canScrollUp, canScrollDown } = this.props;
 
-    const buttonUpClass = 'css-button-up' + (canScrollUp ? '' : ' css-button-disabled');
-
-    const buttonDownClass = 'css-button-down' + (canScrollDown ? '' : ' css-button-disabled');
+    const buttonUpClass = classnames('css-button-up', {'css-button-disabled': !canScrollUp });
+    const buttonDownClass = classnames('css-button-down', {'css-button-disabled': !canScrollDown });
 
     return(
       <div className="app-container">

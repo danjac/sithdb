@@ -37,6 +37,7 @@ function transform(fn) {
 
     const { slots, currentLocation, isLoading, xhrRequests } = payload;
 
+    // isFirst should also be true if we have one and only one empty slot
     const isFirst = _.some(slots, sith => sith && sith.master === 0);
     const isLast = _.some(slots, sith => sith && sith.apprentice === 0);
 
@@ -71,19 +72,6 @@ function abortRequests(state, action) {
 
 
 function scrollUp(state, action) {
-
-  // take the first 3 slots and prepend
-
-  // problem: if we have empty slots due to loading
-
-  // take last 3 slices
-//
-
-  // if first slot empty, do nothing
-
-  if (state.slots[0] === null) {
-    return {};
-  }
 
   const slots = state.slots.slice(0, 3);
 
