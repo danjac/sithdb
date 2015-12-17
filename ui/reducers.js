@@ -72,6 +72,19 @@ function abortRequests(state, action) {
 
 function scrollUp(state, action) {
 
+  // take the first 3 slots and prepend
+
+  // problem: if we have empty slots due to loading
+
+  // take last 3 slices
+//
+
+  // if first slot empty, do nothing
+
+  if (state.slots[0] === null) {
+    return {};
+  }
+
   const slots = state.slots.slice(0, 3);
 
   slots.splice(0, 0, null);

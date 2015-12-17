@@ -8,20 +8,6 @@ import createStore from './store';
 
 const store = createStore();
 
-window.addEventListener("load", function(event) {
-    var ws = new WebSocket("ws://localhost:3001/ws");
-    ws.onclose = function(event) {
-        ws = null;
-    };
-    ws.onmessage = function(event) {
-      const location = JSON.parse(event.data);
-      store.dispatch(changeLocation(location));
-    };
-    ws.onerror = function(event) {
-        console.log("SOCKET ERR", event.data);
-    };
-});
-
 render(
   <Provider store={store}>
     <App />
@@ -30,5 +16,6 @@ render(
 );
 
 
+new WebSocket("ws://localhost:3001/ws").onmessage = event => store.dispatch(changeLocation(JSON.parse(event.data)));
 
 
