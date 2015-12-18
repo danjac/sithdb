@@ -1,7 +1,7 @@
 <template>
     <div class="app-container">
         <div class="css-root">
-            <h1 v-if="location" class="css-planet-monitor">Obi-Wan currently on {{location.name}}</h1>
+            <h1 v-if="planet" class="css-planet-monitor">Obi-Wan currently on {{planet.name}}</h1>
 
             <section class="css-scrollable-list">
               <ul class="css-slots">
@@ -26,6 +26,7 @@ import _ from 'lodash';
 
 const SCROLL_UP = "scroll_up";
 const SCROLL_DOWN = "scroll_down";
+const NUM_SLOTS = 5;
 
 let xhrRequests = [];
 
@@ -39,8 +40,8 @@ export default {
     name: "App",
     data() {
         return {
-            location: null,
-            slots: [null, null, null, null, null],
+            planet: null,
+            slots: _.fill(Array(NUM_SLOTS), null),
             isLoading: false,
             isSithOnWorld: false,
             isFirst: true,
@@ -48,16 +49,16 @@ export default {
         };
     },
     events: {
-        "new-location": function(newLocation){
-           this.location = newLocation;
+        "planet-changed": function(planet){
+           this.planet = planet;
            this.checkIfSithHomeworld();
         }
     },
     ready() {
         this.fillSlots(SCROLL_DOWN, 3616, 0);
-        new WebSocket("ws://localhost:3001/ws")
+        new WebSocket(`ws://${window.location.host}/ws`)
             .onmessage = (event) => {
-                this.$dispatch("new-location", JSON.parse(event.data));
+                this.$dispatch("planet-changed", JSON.parse(event.data));
             };
     },
     computed: {
@@ -68,10 +69,10 @@ export default {
           return !this.isLast && !this.isSithOnWorld && !this.isLoading;
         },
         buttonUpClass() {
-            return ['css-button-up', this.canScrollUp ? '' : 'css-button-disabled']; 
+          return ['css-button-up', this.canScrollUp ? '' : 'css-button-disabled']; 
         },
         buttonDownClass() {
-            return ['css-button-down', this.canScrollDown ? '' : 'css-button-disabled']; 
+          return ['css-button-down', this.canScrollDown ? '' : 'css-button-disabled']; 
         }
     },
     methods: {
@@ -84,16 +85,16 @@ export default {
 
           this.isLoading = true;
 
-          this.$http.get("/sith/" + nextId, data => {
+          this.$http.get("/sith/" + nextId, sith => {
 
             this.isLoading = false;
-            this.slots.splice(index, 1, data);
+            this.slots.splice(index, 1, sith);
 
             if (direction === SCROLL_UP) {
-              nextId = data.master;
+              nextId = sith.master;
               index -= 1;
             } else {
-              nextId = data.apprentice;
+              nextId = sith.apprentice;
               index += 1;
             }
 
@@ -161,7 +162,7 @@ export default {
           }
         },
         isSithHere(slot) {
-            return slot && this.location && this.location.id === slot.homeworld.id;
+            return slot && this.planet && this.planet.id === slot.homeworld.id;
         }
     }
 

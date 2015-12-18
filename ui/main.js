@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Resource from 'vue-resource';
 
-import App from './components/App.vue';
+import App from './App.vue';
 
 Vue.use(Resource);
 Vue.component('app', App);
