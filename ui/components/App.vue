@@ -12,8 +12,8 @@
               </ul>
 
               <div class="css-scroll-buttons">
-                <button :class="buttonUpClass" @click.prevent="moveUp"></button>
-                <button :class="buttonDownClass" @click.prevent="moveDown"></button>
+                <button :class="buttonUpClass" @click.prevent="scrollUp"></button>
+                <button :class="buttonDownClass" @click.prevent="scrollDown"></button>
               </div>
             </section>
       </div>
@@ -21,7 +21,11 @@
 </template>
 
 <script>
-import store from '../store';
+
+import _ from 'lodash';
+
+const SCROLL_UP = "scroll_up";
+const SCROLL_DOWN = "scroll_down";
 
 let xhrRequests = [];
 
@@ -43,27 +47,31 @@ export default {
             isLast: true
         };
     },
-    created() {
-        store.on("update", this.update);
-    },
-    destroyed() {
-        store.removeListener("update", this.update);
+    events: {
+        "new-location": function(newLocation){
+           this.location = newLocation;
+           this.checkIfSithHomeworld();
+        }
     },
     ready() {
-        this.fillSlots("down", 3616, 0);
+        this.fillSlots(SCROLL_DOWN, 3616, 0);
+        new WebSocket("ws://localhost:3001/ws")
+            .onmessage = (event) => {
+                this.$dispatch("new-location", JSON.parse(event.data));
+            };
     },
     computed: {
-        canMoveUp() {
+        canScrollUp() {
           return !this.isFirst && !this.isSithOnWorld && !this.isLoading;
         },
-        canMoveDown() {
+        canScrollDown() {
           return !this.isLast && !this.isSithOnWorld && !this.isLoading;
         },
         buttonUpClass() {
-            return 'css-button-up' + (this.canMoveUp ? '' : ' css-button-disabled'); 
+            return ['css-button-up', this.canScrollUp ? '' : 'css-button-disabled']; 
         },
         buttonDownClass() {
-            return 'css-button-down' + (this.canMoveDown ? '' : ' css-button-disabled'); 
+            return ['css-button-down', this.canScrollDown ? '' : 'css-button-disabled']; 
         }
     },
     methods: {
@@ -81,7 +89,7 @@ export default {
             this.isLoading = false;
             this.slots.splice(index, 1, data);
 
-            if (direction === "up") {
+            if (direction === SCROLL_UP) {
               nextId = data.master;
               index -= 1;
             } else {
@@ -89,10 +97,10 @@ export default {
               index += 1;
             }
 
-            this.isFirst = direction === "up" && !nextId;
-            this.isLast = direction === "down" && !nextId;
+            this.isFirst = direction === SCROLL_UP && !nextId;
+            this.isLast = direction === SCROLL_DOWN && !nextId;
 
-            this.update();
+            this.checkIfSithHomeworld();
 
             if (nextId && this.slots[index] === null) {
               this.fillSlots(direction, nextId, index);
@@ -105,9 +113,9 @@ export default {
           });
         },
 
-        moveUp () {
+        scrollUp () {
 
-          if (!this.canMoveUp) {
+          if (!this.canScrollUp) {
             return;
           }
 
@@ -122,12 +130,12 @@ export default {
           newSlots.splice(1, 0, null);
 
           this.slots = newSlots.slice();
-          this.fillSlots("up", nextId, 1);
+          this.fillSlots(SCROLL_UP, nextId, 1);
 
         },
 
-        moveDown() {
-          if (!this.canMoveDown) {
+        scrollDown() {
+          if (!this.canScrollDown) {
             return;
           }
 
@@ -141,7 +149,7 @@ export default {
           newSlots.splice(5, 0, null);
 
           this.slots = newSlots.slice();
-          this.fillSlots("down", nextId, 3);
+          this.fillSlots(SCROLL_DOWN, nextId, 3);
         },
 
         checkIfSithHomeworld() {
@@ -151,11 +159,6 @@ export default {
           if (this.isSithOnWorld) {
             cancelRequests();
           }
-        },
-
-        update(event) {
-            this.location = store.getLocation();
-            this.checkIfSithHomeworld();
         },
         isSithHere(slot) {
             return slot && this.location && this.location.id === slot.homeworld.id;
