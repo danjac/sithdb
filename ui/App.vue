@@ -27,19 +27,15 @@ import _ from 'lodash';
 const SCROLL_UP = "scroll-up";
 const SCROLL_DOWN = "scroll-down";
 const PLANET_CHANGED = "planet-changed";
+const EMPTY = "empty";
+const PENDING = "pending";
+const LOADED = "loaded";
 
 const NUM_SLOTS = 5;
 const FIRST_SITH_ID = 3616; // Palpatine!
 const EMPTY_PLANET = { id: null, name: null };
-const EMPTY_SLOT = { id: null, name: null, homeworld: EMPTY_PLANET };
+const EMPTY_SLOT = { id: null, name: null, homeworld: EMPTY_PLANET, req: null, state: EMPTY };
 
-let xhrRequests = [];
-
-function abortRequests() {
-  for (var i=0; i < xhrRequests.length; i++) {
-    xhrRequests.shift().abort();
-  }
-}
 
 export default {
     name: "App",
@@ -88,18 +84,20 @@ export default {
             return _.get(obj, "id", null) === null;
         },
         
-        fillSlots(direction, nextId, index, steps=2) {
+        fillSlots(direction, id, index, steps=2) {
 
-          if (!nextId || this.isLoading) {
+          if (!id || this.isLoading) {
             return;
           }
 
           this.isLoading = true;
 
-          this.$http.get("/sith/" + nextId, sith => {
+          this.$http.get("/sith/" + id, sith => {
 
             this.isLoading = false;
-            this.slots.splice(index, 1, sith);
+            this.slots.splice(index, 1, Object.assign({}, sith, { state: LOADED, req: null }));
+
+            let nextId;
 
             if (direction === SCROLL_UP) {
               nextId = sith.master;
@@ -122,7 +120,7 @@ export default {
 
           }, {
             beforeSend(req) {
-              xhrRequests.push(req);
+              this.slots.splice(index, 1, Object.assign({}, EMPTY_SLOT, { id, req, state: PENDING }));
             }
           });
         },
@@ -133,7 +131,10 @@ export default {
             return;
           }
 
-          abortRequests();
+          for (var i=0; i < 2; i++)  {
+              const slot = this.slots[i];
+              if (slot && slot.req) slot.req.abort();
+          }
 
           let newSlots = this.slots.slice(0, 3);
 
@@ -153,7 +154,10 @@ export default {
             return;
           }
 
-          abortRequests();
+          for (var i=4; i < NUM_SLOTS; i++)  {
+              const slot = this.slots[i];
+              if (slot && slot.req) slot.req.abort();
+          }
 
           let newSlots = this.slots.slice(2);
           const lastSlot = newSlots[newSlots.length - 1];
@@ -172,7 +176,9 @@ export default {
             return this.isSithHere(slot);
           });
           if (this.isSithHomeworld) {
-            abortRequests();
+            this.slots.forEach(slot => {
+                if(slot.req) slot.req.abort();
+            });
           }
         },
         isSithHere(slot) {
