@@ -173,11 +173,6 @@ export default {
             return;
           }
 
-          for (var i=4; i < NUM_SLOTS; i++)  {
-              const slot = this.slots[i];
-              if (slot && slot.req) slot.req.abort();
-          }
-
           // take last 3 slots
           let newSlots = this.slots.slice(2);
           this.abortRequests(this.slots.slice(0, 1));
