@@ -27,10 +27,11 @@ import _ from 'lodash';
 const SCROLL_UP = "scroll_up";
 const SCROLL_DOWN = "scroll_down";
 const NUM_SLOTS = 5;
+const FIRST_SITH_ID = 3616; // Palpatine!
 
 let xhrRequests = [];
 
-function cancelRequests() {
+function abortRequests() {
   for (var i=0; i < xhrRequests.length; i++) {
     xhrRequests.shift().abort();
   }
@@ -43,7 +44,7 @@ export default {
             planet: null,
             slots: _.fill(Array(NUM_SLOTS), null),
             isLoading: false,
-            isSithOnWorld: false,
+            isSithHomeworld: false,
             isFirst: true,
             isLast: true
         };
@@ -55,18 +56,20 @@ export default {
         }
     },
     ready() {
-        this.fillSlots(SCROLL_DOWN, 3616, 0);
+        // open websocket to get current planet
         new WebSocket(`ws://${window.location.host}/ws`)
             .onmessage = (event) => {
                 this.$dispatch("planet-changed", JSON.parse(event.data));
             };
+        // start filling up slots
+        this.fillSlots(SCROLL_DOWN, FIRST_SITH_ID, 0);
     },
     computed: {
         canScrollUp() {
-          return !this.isFirst && !this.isSithOnWorld && !this.isLoading;
+          return !this.isFirst && !this.isSithHomeworld && !this.isLoading;
         },
         canScrollDown() {
-          return !this.isLast && !this.isSithOnWorld && !this.isLoading;
+          return !this.isLast && !this.isSithHomeworld && !this.isLoading;
         },
         buttonUpClass() {
           return ['css-button-up', this.canScrollUp ? '' : 'css-button-disabled']; 
@@ -77,6 +80,8 @@ export default {
     },
     methods: {
        
+        // recursively fill any empty slots, until we fill the board
+        // or get to the first or last sith
         fillSlots(direction, nextId, index) {
 
           if (!nextId || this.isLoading) {
@@ -120,7 +125,7 @@ export default {
             return;
           }
 
-          cancelRequests();
+          abortRequests();
 
           let newSlots = this.slots.slice(0, 3);
 
@@ -140,7 +145,7 @@ export default {
             return;
           }
 
-          cancelRequests();
+          abortRequests();
 
           let newSlots = this.slots.slice(2);
           const lastSlot = newSlots[newSlots.length - 1];
@@ -154,11 +159,12 @@ export default {
         },
 
         checkIfSithHomeworld() {
-          this.isSithOnWorld = _.some(this.slots, slot => {
+          // check if sith lives here, if so then cancel any ongoing requests.
+          this.isSithHomeworld = _.some(this.slots, slot => {
             return this.isSithHere(slot);
           });
-          if (this.isSithOnWorld) {
-            cancelRequests();
+          if (this.isSithHomeworld) {
+            abortRequests();
           }
         },
         isSithHere(slot) {
