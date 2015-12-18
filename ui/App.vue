@@ -1,13 +1,13 @@
 <template>
     <div class="app-container">
         <div class="css-root">
-            <h1 v-if="planet" class="css-planet-monitor">Obi-Wan currently on {{planet.name}}</h1>
+            <h1 v-show="!isEmpty(planet)" class="css-planet-monitor">Obi-Wan currently on {{planet.name}}</h1>
 
             <section class="css-scrollable-list">
               <ul class="css-slots">
                 <li :style="{ color: isSithHere(slot) ? 'red': '' }" v-for="slot in slots" class="css-slot" track-by="$index">
-                  <h3 v-if="slot && slot.name">{{slot.name}}</h3>
-                  <h6 v-if="slot && slot.homeworld">Homeworld: {{slot.homeworld.name}}</h6>
+                  <h3 v-show="slot.name">{{slot.name}}</h3>
+                  <h6 v-show="slot.homeworld.id">Homeworld: {{slot.homeworld.name}}</h6>
                 </li>
               </ul>
 
@@ -28,6 +28,8 @@ const SCROLL_UP = "scroll_up";
 const SCROLL_DOWN = "scroll_down";
 const NUM_SLOTS = 5;
 const FIRST_SITH_ID = 3616; // Palpatine!
+const EMPTY_PLANET = { id: null, name: null };
+const EMPTY_SLOT = { id: null, name: null, homeworld: EMPTY_PLANET };
 
 let xhrRequests = [];
 
@@ -41,8 +43,8 @@ export default {
     name: "App",
     data() {
         return {
-            planet: null,
-            slots: _.fill(Array(NUM_SLOTS), null),
+            planet: EMPTY_PLANET,
+            slots: _.fill(Array(NUM_SLOTS), EMPTY_SLOT),
             isLoading: false,
             isSithHomeworld: false,
             isFirst: true,
@@ -62,7 +64,7 @@ export default {
                 this.$dispatch("planet-changed", JSON.parse(event.data));
             };
         // start filling up slots
-        this.fillSlots(SCROLL_DOWN, FIRST_SITH_ID, 0);
+        this.fillSlots(SCROLL_DOWN, FIRST_SITH_ID, 0, 3);
     },
     computed: {
         canScrollUp() {
@@ -80,9 +82,11 @@ export default {
     },
     methods: {
        
-        // recursively fill any empty slots, until we fill the board
-        // or get to the first or last sith
-        fillSlots(direction, nextId, index) {
+        isEmpty(obj)  {
+            return _.get(obj, "id", null) === null;
+        },
+        
+        fillSlots(direction, nextId, index, steps=2) {
 
           if (!nextId || this.isLoading) {
             return;
@@ -108,8 +112,10 @@ export default {
 
             this.checkIfSithHomeworld();
 
-            if (nextId && this.slots[index] === null) {
-              this.fillSlots(direction, nextId, index);
+            steps --;
+
+            if (nextId && this.isEmpty(this.slots[index]) && steps) {
+              this.fillSlots(direction, nextId, index, steps);
             }
 
           }, {
@@ -132,8 +138,8 @@ export default {
           const firstSlot = newSlots[0];
           const nextId = firstSlot ? firstSlot.master : 0;
 
-          newSlots.splice(0, 0, null);
-          newSlots.splice(1, 0, null);
+          newSlots.splice(0, 0, EMPTY_SLOT);
+          newSlots.splice(1, 0, EMPTY_SLOT);
 
           this.slots = newSlots.slice();
           this.fillSlots(SCROLL_UP, nextId, 1);
@@ -151,8 +157,8 @@ export default {
           const lastSlot = newSlots[newSlots.length - 1];
           const nextId = lastSlot ? lastSlot.apprentice : 0;
 
-          newSlots.splice(4, 0, null);
-          newSlots.splice(5, 0, null);
+          newSlots.splice(4, 0, EMPTY_SLOT);
+          newSlots.splice(5, 0, EMPTY_SLOT);
 
           this.slots = newSlots.slice();
           this.fillSlots(SCROLL_DOWN, nextId, 3);
@@ -168,7 +174,7 @@ export default {
           }
         },
         isSithHere(slot) {
-            return slot && this.planet && this.planet.id === slot.homeworld.id;
+            return !this.isEmpty(slot) && this.planet.id === slot.homeworld.id;
         }
     }
 
