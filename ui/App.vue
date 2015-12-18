@@ -24,8 +24,10 @@
 
 import _ from 'lodash';
 
-const SCROLL_UP = "scroll_up";
-const SCROLL_DOWN = "scroll_down";
+const SCROLL_UP = "scroll-up";
+const SCROLL_DOWN = "scroll-down";
+const PLANET_CHANGED = "planet-changed";
+
 const NUM_SLOTS = 5;
 const FIRST_SITH_ID = 3616; // Palpatine!
 const EMPTY_PLANET = { id: null, name: null };
@@ -52,7 +54,7 @@ export default {
         };
     },
     events: {
-        "planet-changed": function(planet){
+        [PLANET_CHANGED]: function(planet){
            this.planet = planet;
            this.checkIfSithHomeworld();
         }
@@ -61,7 +63,7 @@ export default {
         // open websocket to get current planet
         new WebSocket(`ws://${window.location.host}/ws`)
             .onmessage = (event) => {
-                this.$dispatch("planet-changed", JSON.parse(event.data));
+                this.$dispatch(PLANET_CHANGED, JSON.parse(event.data));
             };
         // start filling up slots
         this.fillSlots(SCROLL_DOWN, FIRST_SITH_ID, 0, 3);
