@@ -39,7 +39,15 @@ const LOADED = "loaded";
 const NUM_SLOTS = 5;
 const FIRST_SITH_ID = 3616; // Palpatine!
 const EMPTY_PLANET = { id: null, name: null };
-const EMPTY_SLOT = { id: null, name: null, homeworld: EMPTY_PLANET, req: null, state: EMPTY };
+const EMPTY_SLOT = { 
+    id: null, 
+    name: null, 
+    homeworld: EMPTY_PLANET, 
+    req: null, 
+    master: null,
+    apprentice: null,
+    state: EMPTY 
+};
 
 
 export default {
@@ -89,6 +97,12 @@ export default {
             return _.get(slot, "state", EMPTY) === EMPTY;
         },
         
+        abortRequests(slots) {
+            slots.forEach(slot => {
+                if (slot && slot.req && slot.state === PENDING) slot.req.abort();
+            });
+        },
+
         fillSlots(direction, id, index, steps=2) {
 
           if (!id || this.isLoading) {
@@ -136,18 +150,19 @@ export default {
             return;
           }
 
-          for (var i=0; i < 2; i++)  {
-              const slot = this.slots[i];
-              if (slot && slot.req) slot.req.abort();
-          }
-
+          // take first 3 slots
           let newSlots = this.slots.slice(0, 3);
+
+          // abort any old requests
+          this.abortRequests(this.slots.slice(4));
 
           const firstSlot = newSlots[0];
           const nextId = firstSlot ? firstSlot.master : 0;
 
+          // add 2 slots to the start
           newSlots.unshift(EMPTY_SLOT, EMPTY_SLOT);
           this.slots = newSlots.slice();
+
 
           this.fillSlots(SCROLL_UP, nextId, 1);
 
@@ -163,7 +178,10 @@ export default {
               if (slot && slot.req) slot.req.abort();
           }
 
+          // take last 3 slots
           let newSlots = this.slots.slice(2);
+          this.abortRequests(this.slots.slice(0, 1));
+
           const lastSlot = newSlots[newSlots.length - 1];
           const nextId = lastSlot ? lastSlot.apprentice : 0;
 
@@ -177,9 +195,7 @@ export default {
             return this.isSithHere(slot);
           });
           if (this.isSithHomeworld) {
-            this.slots.forEach(slot => {
-                if(slot.req) slot.req.abort();
-            });
+              this.abortRequests(this.slots);
           }
         },
         isSithHere(slot) {
