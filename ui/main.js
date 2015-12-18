@@ -1,10 +1,10 @@
 import Vue from 'vue';
 import Resource from 'vue-resource';
 
-import App from './App.vue';
+import app from './app.vue';
 
 Vue.use(Resource);
-Vue.component('app', App);
+Vue.component('app', app);
 
 new Vue({
   el: '#app'
