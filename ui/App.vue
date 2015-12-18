@@ -1,7 +1,8 @@
 <template>
     <div class="app-container">
         <div class="css-root">
-            <h1 v-show="!isEmpty(planet)" class="css-planet-monitor">Obi-Wan currently on {{planet.name}}</h1>
+            <h1 v-if="planet.id" class="css-planet-monitor">Obi-Wan currently on {{planet.name}}</h1>
+            <h1 v-else class="css-planet-monitor">Obi-Wan's location unknown </h1>
 
             <section class="css-scrollable-list">
               <ul class="css-slots">
@@ -12,8 +13,12 @@
               </ul>
 
               <div class="css-scroll-buttons">
-                <button :class="buttonUpClass" @click.prevent="scrollUp"></button>
-                <button :class="buttonDownClass" @click.prevent="scrollDown"></button>
+                <button :class="buttonUpClass" 
+                        :disabled="!canScrollUp"
+                        @click.prevent="scrollUp"></button>
+                <button :class="buttonDownClass" 
+                        :disabled="!canScrollDown"
+                        @click.prevent="scrollDown"></button>
               </div>
             </section>
       </div>
@@ -80,8 +85,8 @@ export default {
     },
     methods: {
        
-        isEmpty(obj)  {
-            return _.get(obj, "id", null) === null;
+        isEmpty(slot)  {
+            return _.get(slot, "state", EMPTY) === EMPTY;
         },
         
         fillSlots(direction, id, index, steps=2) {
@@ -141,10 +146,9 @@ export default {
           const firstSlot = newSlots[0];
           const nextId = firstSlot ? firstSlot.master : 0;
 
-          newSlots.splice(0, 0, EMPTY_SLOT);
-          newSlots.splice(1, 0, EMPTY_SLOT);
-
+          newSlots.unshift(EMPTY_SLOT, EMPTY_SLOT);
           this.slots = newSlots.slice();
+
           this.fillSlots(SCROLL_UP, nextId, 1);
 
         },
@@ -163,10 +167,7 @@ export default {
           const lastSlot = newSlots[newSlots.length - 1];
           const nextId = lastSlot ? lastSlot.apprentice : 0;
 
-          newSlots.splice(4, 0, EMPTY_SLOT);
-          newSlots.splice(5, 0, EMPTY_SLOT);
-
-          this.slots = newSlots.slice();
+          this.slots = newSlots.concat(EMPTY_SLOT, EMPTY_SLOT);
           this.fillSlots(SCROLL_DOWN, nextId, 3);
         },
 
